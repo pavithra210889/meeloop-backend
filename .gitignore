@@ -1,0 +1,68 @@
+#database
+database.sqlite
+
+#media files
+media/
+
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Virtual environment
+venv/
+.env/
+.venv/
+ENV/
+env/
+
+# VSCode / IDE settings
+.vscode/
+.idea/
+*.swp
+
+# Environment variables
+.env
+.env.*
+
+# Alembic
+alembic/versions/*.pyc
+alembic/versions/__pycache__/
+
+# Logs
+*.log
+
+# Testing / Coverage
+htmlcov/
+.coverage
+coverage.xml
+pytest_cache/
+.tox/
+nosetests.xml
+test-results/
+.pytest_cache/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pydantic compiled files
+pydantic_schema_cache/
+
+# macOS
+.DS_Store
+
+# Docker
+*.pid
+
+# Other
+dist/
+build/
+*.egg-info/
+
+meeloop.json
+.env
+meeloop.json

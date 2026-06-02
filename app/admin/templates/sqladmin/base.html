@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  {% block head_meta %}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  {% endblock %}
+  {% block head_css %}
+  <link rel="stylesheet" href="{{ url_for('admin:statics', path='css/tabler.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('admin:statics', path='css/tabler-icons.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('admin:statics', path='css/fontawesome.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('admin:statics', path='css/select2.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('admin:statics', path='css/flatpickr.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('admin:statics', path='css/main.css') }}">
+  {% endblock %}
+  {% if admin.favicon_url %}
+  <link rel="icon" href="{{ admin.favicon_url }}">
+  {% endif %}
+  <title>{{ admin.title }}</title>
+  {% block head %}
+  {% endblock %}
+  {% block head_tail %}
+  {% endblock %}
+  <style>
+    /*
+     * Layout fix: .navbar-vertical is position:fixed so it's out of flow.
+     * .page-wrapper gets margin-left:15rem but keeps its full flex-grow width,
+     * causing it to overflow the viewport by 15rem to the right.
+     * Fix: cap page-wrapper at 100vw-15rem and clip overflow on the wrapper.
+     */
+    .wrapper {
+      overflow-x: clip; /* clip, not hidden — won't break fixed/sticky children */
+    }
+
+    .page-wrapper {
+      width: calc(100vw - 15rem) !important;
+      min-width: 0 !important;
+      overflow-x: visible; /* let table-responsive handle its own scroll */
+    }
+
+    .page-body,
+    .container-fluid,
+    .row,
+    .col-12 {
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    /* ── Table: scroll horizontally within its card ── */
+    .table-responsive {
+      overflow-x: auto !important;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Always-visible scrollbar so users know the table is scrollable */
+    .table-responsive::-webkit-scrollbar {
+      height: 8px;
+    }
+    .table-responsive::-webkit-scrollbar-track {
+      background: #e9ecef;
+      border-radius: 4px;
+    }
+    .table-responsive::-webkit-scrollbar-thumb {
+      background: #adb5bd;
+      border-radius: 4px;
+    }
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+      background: #6c757d;
+    }
+
+    /* Keep rows on one line so horizontal scroll makes sense */
+    .table.text-nowrap td,
+    .table.text-nowrap th {
+      white-space: nowrap;
+    }
+
+    /* Stop body from growing a page-level scrollbar */
+    body {
+      overflow-x: hidden;
+    }
+
+    /* ── Mobile-only improvements ── */
+    @media (max-width: 768px) {
+      /* Card header: wrap title + actions */
+      .card-header {
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        padding: 0.75rem 1rem;
+      }
+
+      .card-header h3.card-title {
+        font-size: 0.95rem;
+        margin-bottom: 0;
+      }
+
+      /* Search bar: full width */
+      .card-body .d-flex.justify-content-between {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .card-body .col-md-4 {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: unset !important;
+      }
+
+      /* Actions dropdown: don't grow */
+      .card-body .dropdown.col-4 {
+        width: auto !important;
+        flex: unset !important;
+      }
+
+      /* Compact footer */
+      .card-footer {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+      }
+
+      /* Sidebar nav: tighter on mobile */
+      .navbar-vertical .nav-link {
+        font-size: 0.83rem;
+        padding: 0.35rem 0.75rem;
+      }
+
+      /* Buttons: minimum touch height */
+      .btn {
+        min-height: 34px;
+      }
+
+      /* Page wrapper top padding */
+      .page-wrapper {
+        padding-top: 0 !important;
+      }
+    }
+
+    @media (max-width: 576px) {
+      /* On very small screens shrink the sidebar brand text */
+      .navbar-brand {
+        font-size: 0.9rem;
+      }
+
+      /* Stack "showing X to Y of Z" text */
+      .card-footer p.m-0 {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  {% block body %}
+  <main>
+    {% block main %}
+    {% endblock %}
+  </main>
+  {% endblock %}
+  {% block tail_js %}
+  <script type="text/javascript" src="{{ url_for('admin:statics', path='js/jquery.min.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('admin:statics', path='js/tabler.min.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('admin:statics', path='js/popper.min.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('admin:statics', path='js/bootstrap.min.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('admin:statics', path='js/select2.full.min.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('admin:statics', path='js/flatpickr.min.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('admin:statics', path='js/main.js') }}"></script>
+  {% endblock %}
+  {% block tail %}
+  {% endblock %}
+  <script>
+    (function () {
+      var SIDEBAR_W = 240; // 15rem
+      function fixTables() {
+        var avail = window.innerWidth - SIDEBAR_W;
+        document.querySelectorAll('.table-responsive').forEach(function (el) {
+          el.style.maxWidth = avail + 'px';
+          el.style.overflowX = 'auto';
+        });
+      }
+      // Run immediately (script is at bottom of body, DOM is ready)
+      fixTables();
+      window.addEventListener('resize', fixTables);
+    })();
+  </script>
+</body>
+
+</html>
