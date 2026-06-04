@@ -27,7 +27,7 @@ from ..security import (
     verify_reset_token,
 )
 
-oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="login", auto_error=False)
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/login-user/", auto_error=False)
 from .models import (
     BaseUser,
     Token,

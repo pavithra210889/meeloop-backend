@@ -24,6 +24,7 @@ def upgrade() -> None:
     # Enable PostGIS extension
     op.execute("CREATE EXTENSION IF NOT EXISTS postgis;")
 
+
     with op.batch_alter_table('loopprofile', schema=None) as batch_op:
         batch_op.add_column(sa.Column('location', geoalchemy2.types.Geography(geometry_type='POINT', srid=4326, dimension=2, from_text='ST_GeogFromText', name='geography'), nullable=True))
         batch_op.add_column(sa.Column('location_name', sqlmodel.sql.sqltypes.AutoString(), nullable=True))
