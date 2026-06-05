@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Push Notification - Meeloop Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .card {
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .back-link {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="back-link">
+            <a href="/sqladmin/" class="btn btn-outline-secondary">
+                <i class="fa-solid fa-arrow-left"></i> Back to Admin Panel
+            </a>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0"><i class="fa-solid fa-bell"></i> Send Push Notification</h3>
+            </div>
+            <div class="card-body">
+                    <form id="notificationForm" method="post" action="/admin/send-notification">
+                        <!-- Title Field -->
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Title <span class="text-danger">*</span></label>
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="title"
+                                name="title"
+                                required
+                                maxlength="100"
+                                placeholder="Enter notification title"
+                            >
+                        </div>
+
+                        <!-- Message Field -->
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Message <span class="text-danger">*</span></label>
+                            <textarea
+                                class="form-control"
+                                id="message"
+                                name="message"
+                                rows="4"
+                                required
+                                maxlength="500"
+                                placeholder="Enter notification message"
+                            ></textarea>
+                            <div class="form-text">Maximum 500 characters</div>
+                        </div>
+
+                        <!-- Target Filter -->
+                        <div class="mb-3">
+                            <label for="target" class="form-label">Target <span class="text-danger">*</span></label>
+                            <select class="form-select" id="target" name="target" required>
+                                <optgroup label="📱 Platform Filters">
+                                    <option value="all">All Users</option>
+                                    <option value="mobile_only">📱 Mobile Only (Android + iOS)</option>
+                                    <option value="android">🤖 Android Users Only</option>
+                                    <option value="ios">🍎 iOS Users Only</option>
+                                    <option value="desktop_only">💻 Desktop Only</option>
+                                </optgroup>
+                                <optgroup label="⚡ Activity Filters">
+                                    <option value="active_users">🟢 Active Users (last 7 days)</option>
+                                    <option value="inactive_users">🔴 Inactive Users (30+ days)</option>
+                                    <option value="new_users">🆕 New Users (last 7 days)</option>
+                                </optgroup>
+                                <optgroup label="🎯 Manual Selection">
+                                    <option value="specific_users">👥 Specific Users (via IDs below)</option>
+                                </optgroup>
+                            </select>
+                            <div class="form-text">
+                                <i class="fa-solid fa-filter"></i>
+                                Choose your target audience. Activity filters are based on last login date.
+                            </div>
+                        </div>
+
+                        <!-- User IDs Field (always visible, smart detection) -->
+                        <div class="mb-3">
+                            <label for="user_ids" class="form-label">
+                                Specific User IDs <span class="text-muted">(Optional - overrides target above)</span>
+                            </label>
+                            <textarea
+                                class="form-control"
+                                id="user_ids"
+                                name="user_ids"
+                                rows="4"
+                                placeholder="Example:&#10;01234567-89ab-cdef-0123-456789abcdef&#10;abcdef01-2345-6789-abcd-ef0123456789&#10;&#10;Or comma-separated: user1-id, user2-id, user3-id"
+                            ></textarea>
+                            <div class="form-text">
+                                <i class="fa-solid fa-lightbulb text-warning"></i>
+                                <strong>Smart mode:</strong> Enter one or more user UUIDs here (one per line or comma-separated) to send to specific users only. Leave empty to use the "Target" filter above.
+                            </div>
+                        </div>
+
+                        <!-- Alert Messages -->
+                        <div id="alertContainer"></div>
+
+                        <!-- Recipients Details (shown after sending) -->
+                        <div id="recipientsContainer" style="display: none;">
+                            <div class="card mt-3">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0"><i class="fa-solid fa-users"></i> Recipients Details</h5>
+                                </div>
+                                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Username</th>
+                                                    <th>Email</th>
+                                                    <th>Device</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="recipientsTableBody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Target Preview (optional info box) -->
+                        <div id="targetPreview" class="alert alert-info" style="display: none;">
+                            <i class="fa-solid fa-info-circle"></i>
+                            <span id="targetPreviewText"></span>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg" id="sendButton">
+                                <i class="fa-solid fa-paper-plane"></i> Send Notification
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const targetSelect = document.getElementById('target');
+    const userIdsField = document.getElementById('user_ids');
+    const form = document.getElementById('notificationForm');
+    const sendButton = document.getElementById('sendButton');
+    const alertContainer = document.getElementById('alertContainer');
+    const targetPreview = document.getElementById('targetPreview');
+    const targetPreviewText = document.getElementById('targetPreviewText');
+
+    // Show helpful info when target changes
+    targetSelect.addEventListener('change', function() {
+        const descriptions = {
+            'all': 'This will send to ALL users with active devices.',
+            'mobile_only': 'This will send to users on Android and iOS devices only.',
+            'android': 'This will send to Android users only.',
+            'ios': 'This will send to iOS users only.',
+            'desktop_only': 'This will send to desktop/web app users only.',
+            'active_users': 'This will send to users who logged in within the last 7 days.',
+            'inactive_users': 'This will send to users who haven\'t logged in for 30+ days (re-engagement campaign).',
+            'new_users': 'This will send to users who registered in the last 7 days (welcome/onboarding).',
+            'specific_users': 'Enter user IDs below to send to specific users only.'
+        };
+
+        if (descriptions[this.value]) {
+            targetPreviewText.textContent = descriptions[this.value];
+            targetPreview.style.display = 'block';
+        } else {
+            targetPreview.style.display = 'none';
+        }
+    });
+
+    // Handle form submission
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        // Clear previous alerts
+        alertContainer.innerHTML = '';
+
+        // Disable button during submission
+        sendButton.disabled = true;
+        sendButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
+
+        // Prepare data
+        const userIdsText = document.getElementById('user_ids').value.trim();
+
+        // Parse user IDs if provided
+        let userIdsList = null;
+        if (userIdsText.length > 0) {
+            userIdsList = userIdsText
+                .split(/[\n,]+/)
+                .map(id => id.trim())
+                .filter(id => id.length > 0);
+        }
+
+        // Smart target detection: if user IDs are provided, use specific_users
+        const targetValue = userIdsList && userIdsList.length > 0
+            ? 'specific_users'
+            : document.getElementById('target').value;
+
+        const formData = {
+            title: document.getElementById('title').value,
+            message: document.getElementById('message').value,
+            target: targetValue,
+            user_ids: userIdsList
+        };
+
+        // Validation for specific_users
+        if (formData.target === 'specific_users' && (!formData.user_ids || formData.user_ids.length === 0)) {
+            showAlert('Please enter at least one user ID in the "Specific User IDs" field', 'danger');
+            resetButton();
+            return;
+        }
+
+        try {
+            const response = await fetch('/admin/send-notification', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                showAlert(
+                    `✅ ${result.message}<br>` +
+                    `Success: ${result.stats.success_count} | Failed: ${result.stats.failure_count}`,
+                    'success'
+                );
+
+                // Display recipients details
+                displayRecipients(result.recipients);
+
+                // Reset form on success
+                form.reset();
+            } else {
+                showAlert(`❌ Error: ${result.detail || 'Failed to send notification'}`, 'danger');
+                document.getElementById('recipientsContainer').style.display = 'none';
+            }
+        } catch (error) {
+            showAlert(`❌ Network error: ${error.message}`, 'danger');
+        } finally {
+            resetButton();
+        }
+    });
+
+    function showAlert(message, type) {
+        alertContainer.innerHTML = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+    }
+
+    function resetButton() {
+        sendButton.disabled = false;
+        sendButton.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Send Notification';
+    }
+
+    function displayRecipients(recipients) {
+        const container = document.getElementById('recipientsContainer');
+        const tbody = document.getElementById('recipientsTableBody');
+
+        if (!recipients || recipients.length === 0) {
+            container.style.display = 'none';
+            return;
+        }
+
+        // Clear previous data
+        tbody.innerHTML = '';
+
+        // Populate table with recipients
+        recipients.forEach(recipient => {
+            const row = document.createElement('tr');
+
+            const statusBadge = recipient.status === 'success'
+                ? '<span class="badge bg-success"><i class="fa-solid fa-check"></i> Success</span>'
+                : '<span class="badge bg-danger"><i class="fa-solid fa-times"></i> Failed</span>';
+
+            const deviceIcon = recipient.device_type === 'android'
+                ? '<i class="fa-brands fa-android text-success"></i> Android'
+                : recipient.device_type === 'ios'
+                ? '<i class="fa-brands fa-apple text-secondary"></i> iOS'
+                : recipient.device_type;
+
+            row.innerHTML = `
+                <td>${recipient.username}</td>
+                <td>${recipient.email}</td>
+                <td>${deviceIcon}</td>
+                <td>
+                    ${statusBadge}
+                    ${recipient.error ? `<br><small class="text-muted">${recipient.error}</small>` : ''}
+                </td>
+            `;
+
+            tbody.appendChild(row);
+        });
+
+        // Show the container
+        container.style.display = 'block';
+    }
+});
+</script>
+</body>
+</html>

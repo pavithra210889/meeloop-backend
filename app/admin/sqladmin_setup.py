@@ -1,6 +1,7 @@
-from sqladmin import Admin, ModelView
+from sqladmin import Admin, ModelView, BaseView
 from sqladmin.authentication import AuthenticationBackend
 from starlette.requests import Request
+from starlette.responses import HTMLResponse
 from sqlmodel import Session, select
 
 from app.database import engine
@@ -931,6 +932,35 @@ class AuditLogAdmin(ModelView, model=AdminAuditLog):
     can_view_details = True
 
 
+# ── Custom Admin Pages ───────────────────────────────────────────────────────
+
+class PushNotificationView(BaseView):
+    name = "Push Notifications"
+    icon = "fa-solid fa-paper-plane"
+    identity = "push_notifications"  # Required for routing
+
+    def is_accessible(self, request: Request) -> bool:
+        """Only allow superadmins to access this page"""
+        user_id = request.session.get("admin_user_id")
+        if not user_id:
+            return False
+        with Session(engine) as session:
+            user = session.get(User, user_id)
+            if not user or not user.is_superadmin or not user.is_active:
+                return False
+        return True
+
+    def is_visible(self, request: Request) -> bool:
+        """Control visibility in menu"""
+        return self.is_accessible(request)
+
+    async def index(self, request: Request) -> HTMLResponse:
+        """Redirect to the standalone push notification page"""
+        from starlette.responses import RedirectResponse
+        _ = request  # Mark as intentionally unused
+        return RedirectResponse(url="/admin/push-notification-page", status_code=302)
+
+
 # ── Mount ─────────────────────────────────────────────────────────────────────
 
 def create_admin(app) -> Admin:
@@ -1013,5 +1043,10 @@ def create_admin(app) -> Admin:
 
     # Admin
     admin.add_view(AuditLogAdmin)
+
+    # Custom Admin Pages
+    # Note: Push Notification page available at /admin/push-notification-page
+    # (BaseView routing not compatible with our redirect approach)
+    # admin.add_view(PushNotificationView)
 
     return admin

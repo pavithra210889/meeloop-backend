@@ -170,6 +170,27 @@
   {% block tail %}
   {% endblock %}
   <script>
+    // Add Push Notifications menu item
+    document.addEventListener('DOMContentLoaded', function() {
+      const sidebar = document.querySelector('.navbar-nav');
+      if (sidebar) {
+        const menuItem = document.createElement('li');
+        menuItem.className = 'nav-item';
+        menuItem.innerHTML = `
+          <a class="nav-link" href="/admin/push-notification-page">
+            <span class="nav-link-icon d-md-none d-lg-inline-block">
+              <i class="fa-solid fa-paper-plane"></i>
+            </span>
+            <span class="nav-link-title">
+              Push Notifications
+            </span>
+          </a>
+        `;
+        sidebar.appendChild(menuItem);
+      }
+    });
+  </script>
+  <script>
     (function () {
       var SIDEBAR_W = 240; // 15rem
       function fixTables() {
